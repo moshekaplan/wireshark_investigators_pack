@@ -1,4 +1,4 @@
-# wireshark_hunt_pack
+# Wireshark Hunt Pack
 Custom integrations for investigating packets
 
 This lua script adds a collection of custom commands for investigating network traffic during incident response.
