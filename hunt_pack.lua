@@ -138,6 +138,17 @@ local function search_host_in_splunk(...)
     end
 end
 
+local function examine_url_in_unfurl(...)
+    local fields = {...};
+
+    for i, field in ipairs( fields ) do
+        if (field.name == 'http.request.full_uri') then
+            	browser_open_url("https://dfir.blog/unfurl/?url=" .. field.value)
+            break
+        end
+    end
+end
+
 local function search_url_in_urlvoid(...)
     local fields = {...};
 
@@ -252,23 +263,25 @@ end
 -------------------------------------------------
 
 -- HTTP
-register_packet_menu("HTTP/Lookup HTTP Host on SSL Labs", lookup_ssl_labs, "http.host");
-register_packet_menu("HTTP/Search HTTP Host on Google", search_google_http_host, "http.host");
+register_packet_menu("HTTP/HTTP Host on SSL Labs", lookup_ssl_labs, "http.host");
+register_packet_menu("HTTP/HTTP Host on Google", search_google_http_host, "http.host");
 register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
-register_packet_menu("HTTP/Search for HTTP Host in Robtex", search_host_in_robtex, "http.host");
-register_packet_menu("HTTP/Search for HTTP Host in Shodan", search_http_host_in_shodan, "http.host");
-register_packet_menu("HTTP/Search for HTTP Host in Splunk", search_host_in_splunk, "http.host");
-register_packet_menu("HTTP/Search for HTTP URL in URL Void", search_url_in_urlvoid, "http.request.full_uri");
-register_packet_menu("HTTP/Search for HTTP URL in VirusTotal", search_host_in_splunk, "http.request.full_uri");
+register_packet_menu("HTTP/HTTP Host in Robtex", search_host_in_robtex, "http.host");
+register_packet_menu("HTTP/HTTP Host in Shodan", search_http_host_in_shodan, "http.host");
+register_packet_menu("HTTP/HTTP Host in Splunk", search_host_in_splunk, "http.host");
+register_packet_menu("HTTP/HTTP URL in URL Void", search_url_in_urlvoid, "http.request.full_uri");
+register_packet_menu("HTTP/HTTP URL in VirusTotal", search_host_in_splunk, "http.request.full_uri");
+register_packet_menu("HTTP/HTTP URL in Unfurl", examine_url_in_unfurl, "http.request.full_uri");
+
 
 -- IP
-register_packet_menu("IP/Search for Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
-register_packet_menu("IP/Search for Destination IP in Shodan", search_destip_in_shodan, "ip.dst");
-register_packet_menu("IP/Search for Destination IP in Splunk", search_destip_in_splunk, "ip.dst");
+register_packet_menu("IP/Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
+register_packet_menu("IP/Destination IP in Shodan", search_destip_in_shodan, "ip.dst");
+register_packet_menu("IP/Destination IP in Splunk", search_destip_in_splunk, "ip.dst");
 
 
 -- DNS
-register_packet_menu("DNS/Search DNS Host on Google", search_google_dns_query, "dns.qry.name");
-register_packet_menu("DNS/Lookup DNS Host on MXToolbox", search_mxtoolbox_dns_query, "dns.qry.name");
-register_packet_menu("DNS/Lookup DNS Host on Robtex", search_robtex_dns_query, "dns.qry.name");
+register_packet_menu("DNS/DNS Host on Google", search_google_dns_query, "dns.qry.name");
+register_packet_menu("DNS/DNS Host on MXToolbox", search_mxtoolbox_dns_query, "dns.qry.name");
+register_packet_menu("DNS/DNS Host on Robtex", search_robtex_dns_query, "dns.qry.name");
 
