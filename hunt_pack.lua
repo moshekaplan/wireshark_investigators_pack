@@ -72,6 +72,17 @@ end
 -- HTTP Analysis 
 -------------------------------------------------
 
+local function lookup_alienvault_otx_http_host(...)
+    local fields = {...};
+
+    for i, field in ipairs( fields ) do
+        if (field.name == 'http.host') then
+            browser_open_url('https://otx.alienvault.com/indicator/domain/' .. field.value)
+            break
+        end
+    end
+end
+
 local function lookup_ssl_labs(...)
     local fields = {...};
 
@@ -263,16 +274,16 @@ end
 -------------------------------------------------
 
 -- HTTP
-register_packet_menu("HTTP/HTTP Host on SSL Labs", lookup_ssl_labs, "http.host");
+register_packet_menu("HTTP/HTTP Host on Alienvault OTX", lookup_alienvault_otx_http_host, "http.host");
 register_packet_menu("HTTP/HTTP Host on Google", search_google_http_host, "http.host");
-register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
 register_packet_menu("HTTP/HTTP Host in Robtex", search_host_in_robtex, "http.host");
 register_packet_menu("HTTP/HTTP Host in Shodan", search_http_host_in_shodan, "http.host");
 register_packet_menu("HTTP/HTTP Host in Splunk", search_host_in_splunk, "http.host");
+register_packet_menu("HTTP/HTTP Host in SSL Labs", lookup_ssl_labs, "http.host");
+register_packet_menu("HTTP/HTTP URL in Unfurl", examine_url_in_unfurl, "http.request.full_uri");
 register_packet_menu("HTTP/HTTP URL in URL Void", search_url_in_urlvoid, "http.request.full_uri");
 register_packet_menu("HTTP/HTTP URL in VirusTotal", search_host_in_splunk, "http.request.full_uri");
-register_packet_menu("HTTP/HTTP URL in Unfurl", examine_url_in_unfurl, "http.request.full_uri");
-
+register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
 
 -- IP
 register_packet_menu("IP/Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
