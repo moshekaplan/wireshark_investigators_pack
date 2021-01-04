@@ -189,12 +189,12 @@ end
 
 -- Traffic from this source IP
 
-local function search_destip_in_robtex(...)
+local function search_destip_in_iplocation(...)
     local fields = {...};
 
     for i, field in ipairs( fields ) do
         if (field.name == 'ip.dst') then
-            	browser_open_url(ROBTEX_URL .. field.display)
+            	browser_open_url("https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=" .. field.value)
             break
         end
     end
@@ -286,6 +286,7 @@ register_packet_menu("HTTP/HTTP URL in VirusTotal", search_host_in_splunk, "http
 register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
 
 -- IP
+register_packet_menu("IP/Destination IP in IP Location", search_destip_in_iplocation, "ip.dst");
 register_packet_menu("IP/Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
 register_packet_menu("IP/Destination IP in Shodan", search_destip_in_shodan, "ip.dst");
 register_packet_menu("IP/Destination IP in Splunk", search_destip_in_splunk, "ip.dst");
