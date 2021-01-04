@@ -116,6 +116,17 @@ local function search_host_in_robtex(...)
     end
 end
 
+local function search_http_host_in_shodan(...)
+    local fields = {...};
+
+    for i, field in ipairs( fields ) do
+        if (field.name == 'http.host') then
+            	browser_open_url("https://www.shodan.io/search?query=" .. field.value)
+            break
+        end
+    end
+end
+
 local function search_host_in_splunk(...)
     local fields = {...};
 
@@ -156,17 +167,6 @@ end
 
 -- Traffic from this source IP
 
-local function search_destip_in_splunk(...)
-    local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'ip.dst') then
-            	browser_open_url(SPLUNK_URL .. 'index=* sourcetype=* ' .. field.display)
-            break
-        end
-    end
-end
-
 local function search_destip_in_robtex(...)
     local fields = {...};
 
@@ -178,6 +178,27 @@ local function search_destip_in_robtex(...)
     end
 end
 
+local function search_destip_in_shodan(...)
+    local fields = {...};
+
+    for i, field in ipairs( fields ) do
+        if (field.name == 'ip.dst') then
+            	browser_open_url("https://www.shodan.io/host/" .. field.value)
+            break
+        end
+    end
+end
+
+local function search_destip_in_splunk(...)
+    local fields = {...};
+
+    for i, field in ipairs( fields ) do
+        if (field.name == 'ip.dst') then
+            	browser_open_url(SPLUNK_URL .. 'index=* sourcetype=* ' .. field.display)
+            break
+        end
+    end
+end
 
 -------------------------------------------------
 -- SMTP Analysis 
@@ -235,12 +256,14 @@ register_packet_menu("HTTP/Lookup HTTP Host on SSL Labs", lookup_ssl_labs, "http
 register_packet_menu("HTTP/Search HTTP Host on Google", search_google_http_host, "http.host");
 register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
 register_packet_menu("HTTP/Search for HTTP Host in Robtex", search_host_in_robtex, "http.host");
+register_packet_menu("HTTP/Search for HTTP Host in Shodan", search_http_host_in_shodan, "http.host");
 register_packet_menu("HTTP/Search for HTTP Host in Splunk", search_host_in_splunk, "http.host");
 register_packet_menu("HTTP/Search for HTTP URL in URL Void", search_url_in_urlvoid, "http.request.full_uri");
 register_packet_menu("HTTP/Search for HTTP URL in VirusTotal", search_host_in_splunk, "http.request.full_uri");
 
 -- IP
 register_packet_menu("IP/Search for Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
+register_packet_menu("IP/Search for Destination IP in Shodan", search_destip_in_shodan, "ip.dst");
 register_packet_menu("IP/Search for Destination IP in Splunk", search_destip_in_splunk, "ip.dst");
 
 
