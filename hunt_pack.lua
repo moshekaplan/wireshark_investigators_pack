@@ -5,8 +5,6 @@
 -------------------------------------------------
 
 SPLUNK_URL = "https://splunk:8443/en-US/appsearch/search?q="
-ROBTEX_URL = "https://www.robtex.com/dns-lookup/"
-
 
 -------------------------------------------------
 -- General Helper Functions 
@@ -68,41 +66,38 @@ local function run_in_terminal(cmd, ...)
 
 end
 
+local function open_url_with_field(url, fieldname, fields)
+    for i, field in ipairs( fields ) do
+        if (field.name == fieldname) then
+            browser_open_url(url .. field.value)
+            break
+        end
+    end
+end
+
 -------------------------------------------------
 -- HTTP Analysis 
 -------------------------------------------------
 
 local function lookup_alienvault_otx_http_host(...)
-    local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            browser_open_url('https://otx.alienvault.com/indicator/domain/' .. field.value)
-            break
-        end
-    end
+    local url = 'https://otx.alienvault.com/indicator/domain/'
+    local fieldname = 'http.host'
+    local fields = {...}
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function lookup_ssl_labs(...)
+    local url = 'https://www.ssllabs.com/ssltest/analyze.html?d='
+    local fieldname = 'http.host'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            browser_open_url('https://www.ssllabs.com/ssltest/analyze.html?d=' .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_google_http_host(...)
+    local url = 'https://www.google.com/search?q='
+    local fieldname = 'http.host'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            browser_open_url('https://www.google.com/search?q=' .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function nslookup(...)
@@ -117,25 +112,17 @@ local function nslookup(...)
 end
 
 local function search_host_in_robtex(...)
+    local url = 'https://www.robtex.com/dns-lookup/'
+    local fieldname = 'http.host'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            	browser_open_url(ROBTEX_URL .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_http_host_in_shodan(...)
+    local url = 'https://www.shodan.io/search?query='
+    local fieldname = 'http.host'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            	browser_open_url("https://www.shodan.io/search?query=" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_host_in_splunk(...)
@@ -150,36 +137,24 @@ local function search_host_in_splunk(...)
 end
 
 local function examine_url_in_unfurl(...)
+    local url = 'https://dfir.blog/unfurl/?url='
+    local fieldname = 'http.request.full_uri'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.request.full_uri') then
-            	browser_open_url("https://dfir.blog/unfurl/?url=" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_url_in_urlvoid(...)
+    local url = 'https://www.urlvoid.com/scan/'
+    local fieldname = 'http.request.full_uri'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.request.full_uri') then
-            	browser_open_url("https://www.urlvoid.com/scan/google.com/" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_url_in_virustotal(...)
+    local url = 'https://www.virustotal.com/gui/search/'
+    local fieldname = 'http.request.full_uri'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.request.full_uri') then
-            	browser_open_url("https://www.virustotal.com/gui/search/" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 
@@ -190,25 +165,17 @@ end
 -- Traffic from this source IP
 
 local function search_destip_in_iplocation(...)
+    local url = 'https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query='
+    local fieldname = 'ip.dst'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'ip.dst') then
-            	browser_open_url("https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_destip_in_shodan(...)
+    local url = 'https://www.shodan.io/host/'
+    local fieldname = 'ip.dst'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'ip.dst') then
-            	browser_open_url("https://www.shodan.io/host/" .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_destip_in_splunk(...)
@@ -237,36 +204,24 @@ end
 -------------------------------------------------
 
 local function search_google_dns_query(...)
+    local url = 'https://www.google.com/search?q='
+    local fieldname = 'dns.qry.name'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'dns.qry.name') then
-            browser_open_url('https://www.google.com/search?q=' .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_mxtoolbox_dns_query(...)
+    local url = 'https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=dns:'
+    local fieldname = 'dns.qry.name'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'dns.qry.name') then
-            browser_open_url('https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=dns:' .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 local function search_robtex_dns_query(...)
+    local url = 'https://www.robtex.com/dns-lookup/'
+    local fieldname = 'dns.qry.name'
     local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'dns.qry.name') then
-            browser_open_url('https://www.robtex.com/dns-lookup/' .. field.value)
-            break
-        end
-    end
+    return open_url_with_field(url, fieldname, fields)
 end
 
 -------------------------------------------------
@@ -287,7 +242,6 @@ register_packet_menu("HTTP/nslookup HTTP Host", nslookup, "http.host");
 
 -- IP
 register_packet_menu("IP/Destination IP in IP Location", search_destip_in_iplocation, "ip.dst");
-register_packet_menu("IP/Destination IP in Robtex", search_destip_in_robtex, "ip.dst");
 register_packet_menu("IP/Destination IP in Shodan", search_destip_in_shodan, "ip.dst");
 register_packet_menu("IP/Destination IP in Splunk", search_destip_in_splunk, "ip.dst");
 
@@ -296,4 +250,3 @@ register_packet_menu("IP/Destination IP in Splunk", search_destip_in_splunk, "ip
 register_packet_menu("DNS/DNS Host on Google", search_google_dns_query, "dns.qry.name");
 register_packet_menu("DNS/DNS Host on MXToolbox", search_mxtoolbox_dns_query, "dns.qry.name");
 register_packet_menu("DNS/DNS Host on Robtex", search_robtex_dns_query, "dns.qry.name");
-
