@@ -169,9 +169,10 @@ end
 -- HTTP URL Analysis
 -------------------------------------------------
 
--- Helper to register a callback for a URL
+-- Helper to register a callback for an HTTP URL
+-- Entry is displayed as "HTTP URL/<menu_title>
+-- Appends http.request.full_uri to the end of the provided url
 local function register_http_url(menu_title, url)
-
     local function generate_url_callback(...)
         local fields = {...};
         local fieldname = "http.request.full_uri"
