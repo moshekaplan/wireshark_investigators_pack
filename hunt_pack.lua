@@ -130,38 +130,17 @@ end
 -------------------------------------------------
 
 -- Helper to register a callback for HTTP host
+-- Entry is displayed as "HTTP Host/<menu_title>
+-- Appends http.host to the end of the provided url
 local function register_http_host(menu_title, url)
-
-    local function generate_url_callback(...)
+    local function generate_host_callback(...)
         local fields = {...};
         local fieldname = "http.host"
-        return open_url_with_field_display(url, fieldname, fields)
+        return open_url_with_field_value(url, fieldname, fields)
     end
-
-    register_packet_menu("HTTP Host/" .. menu_title, generate_url_callback, "http.host");
+    register_packet_menu("HTTP Host/" .. menu_title, generate_host_callback, "http.host");
 end
 
-
-local function lookup_alienvault_otx_http_host(...)
-    local url = 'https://otx.alienvault.com/indicator/domain/'
-    local fieldname = 'http.host'
-    local fields = {...}
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function lookup_ssl_labs(...)
-    local url = 'https://www.ssllabs.com/ssltest/analyze.html?d='
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function search_google_http_host(...)
-    local url = 'https://www.google.com/search?q='
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
 
 local function nslookup(...)
     local fields = {...};
@@ -184,36 +163,6 @@ local function ping(...)
         end
     end
 end
-
-local function search_host_in_robtex(...)
-    local url = 'https://www.robtex.com/dns-lookup/'
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function search_http_host_in_shodan(...)
-    local url = 'https://www.shodan.io/search?query='
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-
-local function search_host_in_virustotal(...)
-    local url = 'https://www.virustotal.com/gui/domain/'
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function search_host_in_whois(...)
-    local url = 'https://www.whois.com/whois/'
-    local fieldname = 'http.host'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
 
 
 -------------------------------------------------
@@ -297,19 +246,19 @@ register_packet_menu("DNS/Robtex for queried host", search_robtex_dns_query, "dn
 
 
 -- HTTP Host
-register_packet_menu("HTTP Host/Alienvault OTX", lookup_alienvault_otx_http_host, "http.host");
-register_packet_menu("HTTP Host/Google", search_google_http_host, "http.host");
+register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
+register_http_host("Google", "https://www.google.com/search?q=")
 register_packet_menu("HTTP Host/nslookup", nslookup, "http.host");
 register_packet_menu("HTTP Host/ping", ping, "http.host");
-register_packet_menu("HTTP Host/Robtex", search_host_in_robtex, "http.host");
-register_packet_menu("HTTP Host/Shodan", search_http_host_in_shodan, "http.host");
+register_http_host("Robtex", "https://www.robtex.com/dns-lookup/")
+register_http_host("Shodan", "https://www.shodan.io/search?query=")
 -- Note: This action requires setting the SPLUNK_URL:
 if SPLUNK_URL ~= nil then
     register_packet_menu("HTTP Host/Splunk", search_field_value_in_splunk("http.host"), "http.host");
 end
-register_packet_menu("HTTP Host/SSL Labs", lookup_ssl_labs, "http.host");
-register_packet_menu("HTTP Host/VirusTotal", search_host_in_virustotal, "http.host");
-register_packet_menu("HTTP Host/Whois", search_host_in_whois, "http.host");
+register_http_host("SSL Labs", "https://www.ssllabs.com/ssltest/analyze.html?d=")
+register_http_host("VirusTotal", "https://www.virustotal.com/gui/domain/")
+register_http_host("Whois", "https://www.whois.com/whois/")
 
 -- HTTP URL
 register_http_url("McAfee Categorization", "https://sitelookup.mcafee.com/en/feedback/url?action=checksingle&product=01-ts&url=");
