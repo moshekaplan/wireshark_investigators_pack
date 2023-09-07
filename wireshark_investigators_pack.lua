@@ -1,4 +1,4 @@
--- Analyst Hunt Pack
+-- Analyst Investigators Pack
 
 -------------------------------------------------
 -- Configurable values 
