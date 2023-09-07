@@ -3,8 +3,8 @@ Custom integrations for investigating packets
 
 This lua script adds a collection of custom commands for investigating network traffic during incident response.
 
-# Pre-requisities:
-Needs to be running Wireshark 4.2 (which has merged https://gitlab.com/wireshark/wireshark/-/merge_requests/1500)
+# Prerequisities:
+Needs to be running Wireshark 4.2. Some features only available on Windows.
 
 # Quick Usage
 Run wireshark from the CLI as `wireshark -X lua_script:path/to/hunt_pack.lua`
