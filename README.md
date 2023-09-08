@@ -7,7 +7,7 @@ This lua script adds a collection of custom commands for investigating network t
 Needs to be running Wireshark 4.2. Some features are only available on Windows.
 
 # Quick Usage
-Run wireshark from the CLI as `wireshark -X lua_script:path/to/wireshark_investigators_pack.lua`
+Copy the contents of wireshark_investigators_pack.lua into Wireshark's `Tools -> Lua -> Evaluate` text box.
 
 # Installation:
 Copy `wireshark_investigators_pack.lua` to your Plugins directory:
