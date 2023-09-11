@@ -141,6 +141,20 @@ local function mozilla_observatory_TLS_Headers_check(...)
     return open_url_with_field_value(url, fieldname, fields)
 end
 
+local function JA3_lookup(...)
+    local url = 'https://sslbl.abuse.ch/ja3-fingerprints/'
+    local fieldname = 'tls.handshake.ja3'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
+local function JA3_Server_lookup(...)
+    local url = 'https://sslbl.abuse.ch/ja3-fingerprints/'
+    local fieldname = 'tls.handshake.ja3s'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
 -- f00
 
 local function search_google_dns_query(...)
@@ -300,6 +314,9 @@ register_packet_menu("TLS/nslookup SNI", sni_lookup, "tls.handshake.extensions_s
 register_packet_menu("TLS/SSL Labs report", search_ssl_labs, "tls.handshake.extensions_server_name")
 register_packet_menu("TLS/Scan with SSL Checker", search_ssl_checker, "tls.handshake.extensions_server_name")
 register_packet_menu("TLS/Mozilla Observatory Headers Check", mozilla_observatory_TLS_Headers_check, "tls.handshake.extensions_server_name")
+register_packet_menu("TLS/JA3/Server Lookup", JA3_Server_lookup, "tls.handshake.ja3s")
+register_packet_menu("TLS/JA3/Client Lookup", JA3_lookup, "tls.handshake.ja3")
+
 
 -- HTTP Host
 register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
