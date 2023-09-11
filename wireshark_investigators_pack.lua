@@ -113,6 +113,36 @@ end
 -- DNS Analysis
 -------------------------------------------------
 
+local function search_virus_total_domain(...)
+    local url = 'https://www.virustotal.com/gui/domain/'
+    local fieldname = 'tls.handshake.extensions_server_name'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
+local function search_ssl_labs(...)
+    local url = 'https://www.ssllabs.com/ssltest/analyze.html?d='
+    local fieldname = 'tls.handshake.extensions_server_name'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
+local function search_ssl_checker(...)
+    local url = 'https://www.sslshopper.com/ssl-checker.html#hostname='
+    local fieldname = 'tls.handshake.extensions_server_name'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
+local function mozilla_observatory_TLS_Headers_check(...)
+    local url = 'https://observatory.mozilla.org/analyze/'
+    local fieldname = 'tls.handshake.extensions_server_name'
+    local fields = {...};
+    return open_url_with_field_value(url, fieldname, fields)
+end
+
+-- f00
+
 local function search_google_dns_query(...)
     local url = 'https://www.google.com/search?q='
     local fieldname = 'dns.qry.name'
@@ -158,6 +188,15 @@ local function nslookup(...)
         if (field.name == 'http.host') then
             run_in_terminal('nslookup', validate_domain_name(field.value))
             break
+        end
+    end
+end
+
+local function sni_lookup(...)
+    local fields = {...};
+    for i, field in ipairs( fields ) do
+        if (field.name == 'tls.handshake.extensions_server_name') then
+            run_in_terminal('nslookup', validate_domain_name(field.value))
         end
     end
 end
@@ -255,6 +294,13 @@ register_packet_menu("DNS/MXToolbox for queried host", search_mxtoolbox_dns_quer
 register_packet_menu("DNS/Robtex for queried host", search_robtex_dns_query, "dns.qry.name");
 
 
+-- TLS f00
+register_packet_menu("TLS/VirusTotal SNI Lookup", search_virus_total_domain, "tls.handshake.extensions_server_name")
+register_packet_menu("TLS/nslookup SNI", sni_lookup, "tls.handshake.extensions_server_name")
+register_packet_menu("TLS/SSL Labs report", search_ssl_labs, "tls.handshake.extensions_server_name")
+register_packet_menu("TLS/Scan with SSL Checker", search_ssl_checker, "tls.handshake.extensions_server_name")
+register_packet_menu("TLS/Mozilla Observatory Headers Check", mozilla_observatory_TLS_Headers_check, "tls.handshake.extensions_server_name")
+
 -- HTTP Host
 register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
 register_http_host("Google", "https://www.google.com/search?q=")
@@ -280,6 +326,9 @@ register_both_src_dest_IP("ASN lookup", "https://mxtoolbox.com/SuperTool.aspx?ru
 register_both_src_dest_IP("IPLocation lookup", "https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=")
 register_both_src_dest_IP("IP Void scan", "https://www.ipvoid.com/scan/")
 register_both_src_dest_IP("Shodan search", "https://www.shodan.io/host/")
+register_both_src_dest_IP("IP Abuse DB lookup", "https://www.abuseipdb.com/check/")
+register_both_src_dest_IP("VirusTotal IP Lookup", "https://www.virustotal.com/gui/ip-address/")
+
 -- Note: This action requires setting the SPLUNK_URL:
 if SPLUNK_URL ~= nil then
     register_both_src_dest_IP("Splunk search", SPLUNK_URL)
