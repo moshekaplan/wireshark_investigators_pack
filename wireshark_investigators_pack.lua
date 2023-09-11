@@ -1,16 +1,25 @@
 -- Analyst Investigators Pack
 
 -------------------------------------------------
--- Configurable values 
+-- Configurable values
 -------------------------------------------------
 
--- Uncomment and set this to your Splunk server to 
+-- Uncomment and set this to your Splunk server to
 -- enable Splunk-based actions
 -- SPLUNK_URL = "https://splunk:8443/en-US/appsearch/search?q="
 
 -------------------------------------------------
--- General Helper Functions 
+-- General Helper Functions
 -------------------------------------------------
+local function validate_domain_name(dn)
+    local ret = "InvalidDomain"
+    if string.find(dn, "^%s*[%w%._-]+$") then
+        return dn
+    else
+        return ret
+    end
+end
+
 local function win_shell_quote(s)
     s = string.gsub(s, "\\", "\\\\")
     s = string.gsub(s, '"', '\"')
@@ -37,7 +46,7 @@ local function run_in_terminal(cmd, ...)
     -- open -a Terminal -n
     -- and for Ubuntu,
     -- ubuntu_cmd = 'gnome-terminal -e "bash -c \\"' .. string_quote(command_string) .. '; exec bash\\""'
-    
+
     local local_os = 'unknown'
     if (package.config:sub(1,1) == '\\') then
         local_os = 'win'
@@ -101,7 +110,7 @@ local function search_field_value_in_splunk(field_name)
 end
 
 -------------------------------------------------
--- DNS Analysis 
+-- DNS Analysis
 -------------------------------------------------
 
 local function search_google_dns_query(...)
@@ -147,7 +156,7 @@ local function nslookup(...)
 
     for i, field in ipairs( fields ) do
         if (field.name == 'http.host') then
-            run_in_terminal('nslookup', field.value)
+            run_in_terminal('nslookup', validate_domain_name(field.value))
             break
         end
     end
@@ -158,7 +167,7 @@ local function ping(...)
 
     for i, field in ipairs( fields ) do
         if (field.name == 'http.host') then
-            run_in_terminal('ping', field.value)
+            run_in_terminal('ping', validate_domain_name(field.value))
             break
         end
     end
@@ -184,7 +193,7 @@ end
 
 
 -------------------------------------------------
--- IP Address Analysis 
+-- IP Address Analysis
 -------------------------------------------------
 
 -- Register a callback for both Source and Dest IPs
@@ -206,7 +215,7 @@ local function register_both_src_dest_IP(menu_title, url)
 end
 
 -------------------------------------------------
--- SMTP/IMF Analysis 
+-- SMTP/IMF Analysis
 -------------------------------------------------
 
 -- Emails with this subject
@@ -228,16 +237,16 @@ local function lookup_spamhaus_imf_from(...)
             else
                 email_address = field.value
             end
-            
+
             browser_open_url(url .. email_address)
             break
         end
     end
-    
+
 end
 
 -------------------------------------------------
--- Register all packet menus 
+-- Register all packet menus
 -------------------------------------------------
 
 -- DNS
