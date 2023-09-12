@@ -11,32 +11,28 @@
 -------------------------------------------------
 -- General Helper Functions 
 -------------------------------------------------
-local function win_shell_quote(s)
-    s = string.gsub(s, "\\", "\\\\")
-    s = string.gsub(s, '"', '\"')
-    return '"' .. s .. '"'
-end
 
-local function shell_quote(s)
-    return "'" .. string.gsub(s, "'", "'\"'\"'") .. "'"
-end
 
-local function string_quote(s)
-    s = string.gsub(s, "\\", "\\\\")
-    s = string.gsub(s, '"', '\"')
-    return s
+function win_escape_parameter(parameter)
+    -- Special characters to escape
+    -- Source: https://ss64.com/nt/syntax-esc.html
+    -- ^ is special in both Windows shell and Lua's gsub and so requires
+    -- its own escaping to avoid matching the 'start of string'
+    -- As such, it is handled separately
+    -- See http://www.lua.org/manual/5.2/manual.html#6.4.1
+    local special_characters = {'&', '|', '>', '<', '"'}
+    parameter = parameter:gsub('%^', "^^^^")
+    for i, special_char in ipairs(special_characters) do
+        parameter = parameter:gsub(special_char, '^^^'.. special_char)
+    end
+    -- % is used for Windows shell variable expansion, it too must be escaped
+    parameter = parameter:gsub("%", "%%%%")
+    return parameter
 end
 
 -- Note: Currently only supports windows!
-local function run_in_terminal(cmd, ...)
-    local args = {...};
-
-    -- Detect the client's operating system
-    -- According to https://www.quora.com/What-is-the-terminal-command-to-open-new-terminal-window-in-Mac ,
-    -- the command for Mac is:
-    -- open -a Terminal -n
-    -- and for Ubuntu,
-    -- ubuntu_cmd = 'gnome-terminal -e "bash -c \\"' .. string_quote(command_string) .. '; exec bash\\""'
+local function run_in_terminal(...)
+    local cmd_args = {...};
     
     local local_os = 'unknown'
     if (package.config:sub(1,1) == '\\') then
@@ -50,17 +46,20 @@ local function run_in_terminal(cmd, ...)
         -- Windows Example: start cmd /k ping "google.com"
         local arg_string = ""
 
-        for i, arg in ipairs(args) do
-            arg_string = arg_string .. ' ' .. win_shell_quote(arg)
+        for i, arg in ipairs(cmd_args) do
+            if (i == 1) then
+                arg_string = win_escape_parameter(arg)
+            else
+                arg_string = arg_string .. ' ' .. win_escape_parameter(arg)
+            end
         end
 
-        win_cmd = 'start cmd /k ' .. cmd .. arg_string
+        win_cmd = 'start cmd /k "' .. arg_string .. '"'
         print(win_cmd)
         os.execute(win_cmd)
     else
         print("Unsupported Operating System")
     end
-
 end
 
 -- Opens a URL with the fieldname's string version of the field appended to the end
