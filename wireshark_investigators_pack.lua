@@ -26,7 +26,7 @@ function win_escape_parameter(parameter)
         parameter = parameter:gsub(special_char, '^^^'.. special_char)
     end
     -- % is used for Windows shell variable expansion, it too must be escaped
-    parameter = parameter:gsub("%", "%%%%")
+    parameter = parameter:gsub("%%", "%%%%")
     return parameter
 end
 
