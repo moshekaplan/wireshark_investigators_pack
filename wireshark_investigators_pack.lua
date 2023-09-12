@@ -242,9 +242,11 @@ register_http_url("URLVoid", "https://www.urlvoid.com/scan/");
 
 -- IP
 register_both_src_dest_IP("ASN lookup", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=asn%3a")
-register_both_src_dest_IP("IPLocation lookup", "https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=")
+register_both_src_dest_IP("IP Abuse DB lookup", "https://www.abuseipdb.com/check/")
+register_both_src_dest_IP("IP Location lookup", "https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=")
 register_both_src_dest_IP("IP Void scan", "https://www.ipvoid.com/scan/")
 register_both_src_dest_IP("Shodan search", "https://www.shodan.io/host/")
+register_both_src_dest_IP("VirusTotal IP Lookup", "https://www.virustotal.com/gui/ip-address/")
 -- Note: This action requires setting the SPLUNK_URL:
 if SPLUNK_URL ~= nil then
     register_both_src_dest_IP("Splunk search", SPLUNK_URL)
