@@ -240,6 +240,13 @@ register_http_url("McAfee Categorization", "https://sitelookup.mcafee.com/en/fee
 register_http_url("Unfurl", "https://dfir.blog/unfurl/?url=");
 register_http_url("URLVoid", "https://www.urlvoid.com/scan/");
 
+
+-- IMF (SMTP)
+register_packet_menu("IMF/Spamhaus for email sender", lookup_spamhaus_imf_from, "imf.from");
+if SPLUNK_URL ~= nil then
+    register_packet_menu("IMF/Splunk search for subject", search_field_value_in_splunk("imf.subject"), "imf.subject");
+end
+
 -- IP
 register_both_src_dest_IP("ASN lookup", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=asn%3a")
 register_both_src_dest_IP("IP Abuse DB lookup", "https://www.abuseipdb.com/check/")
@@ -252,9 +259,15 @@ if SPLUNK_URL ~= nil then
     register_both_src_dest_IP("Splunk search", SPLUNK_URL)
 end
 
+-- TLS
+register_tls_ja3_client = create_registration_url_with_field("TLS", "tls.handshake.ja3", "value")
+register_tls_ja3_client("JA3/Client Lookup", "https://sslbl.abuse.ch/ja3-fingerprints/")
+register_tls_ja3_server = create_registration_url_with_field("TLS", "tls.handshake.ja3s", "value")
+register_tls_ja3_server("JA3/Server Lookup", "https://sslbl.abuse.ch/ja3-fingerprints/")
 
--- IMF (SMTP)
-register_packet_menu("IMF/Spamhaus for email sender", lookup_spamhaus_imf_from, "imf.from");
-if SPLUNK_URL ~= nil then
-    register_packet_menu("IMF/Splunk search for subject", search_field_value_in_splunk("imf.subject"), "imf.subject");
-end
+register_tls_sni = create_registration_url_with_field("TLS", "tls.handshake.extensions_server_name", "value")
+register_tls_sni("Mozilla Observatory Headers Check", 'https://observatory.mozilla.org/analyze/')
+register_packet_menu("TLS/nslookup SNI", sni_lookup, "tls.handshake.extensions_server_name")
+register_tls_sni("SSL Checker scan", 'https://www.sslshopper.com/ssl-checker.html#hostname=')
+register_tls_sni("SSL Labs report", "https://www.ssllabs.com/ssltest/analyze.html?d=")
+register_tls_sni("VirusTotal SNI Lookup", 'https://www.virustotal.com/gui/domain/')
