@@ -208,6 +208,19 @@ local function lookup_spamhaus_imf_from(...)
 end
 
 -------------------------------------------------
+-- TLS Analysis 
+-------------------------------------------------
+
+local function sni_lookup(...)
+    local fields = {...};
+    for i, field in ipairs( fields ) do
+        if (field.name == 'tls.handshake.extensions_server_name') then
+            run_in_terminal('nslookup', field.value)
+        end
+    end
+end
+
+-------------------------------------------------
 -- Register all packet menus 
 -------------------------------------------------
 
