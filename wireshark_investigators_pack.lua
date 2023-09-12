@@ -11,33 +11,15 @@
 -------------------------------------------------
 -- General Helper Functions 
 -------------------------------------------------
-local function win_shell_quote(s)
-    s = string.gsub(s, "\\", "\\\\")
-    s = string.gsub(s, '"', '\"')
-    return '"' .. s .. '"'
-end
-
-local function shell_quote(s)
-    return "'" .. string.gsub(s, "'", "'\"'\"'") .. "'"
-end
-
-local function string_quote(s)
-    s = string.gsub(s, "\\", "\\\\")
-    s = string.gsub(s, '"', '\"')
-    return s
+local function validate_domain_name(domain)
+    return string.find(domain, "^%s*[%w%._-]+$") ~= nil
 end
 
 -- Note: Currently only supports windows!
-local function run_in_terminal(cmd, ...)
-    local args = {...};
+local function run_in_terminal(...)
+    local cmd_args = {...};
 
     -- Detect the client's operating system
-    -- According to https://www.quora.com/What-is-the-terminal-command-to-open-new-terminal-window-in-Mac ,
-    -- the command for Mac is:
-    -- open -a Terminal -n
-    -- and for Ubuntu,
-    -- ubuntu_cmd = 'gnome-terminal -e "bash -c \\"' .. string_quote(command_string) .. '; exec bash\\""'
-    
     local local_os = 'unknown'
     if (package.config:sub(1,1) == '\\') then
         local_os = 'win'
@@ -50,11 +32,15 @@ local function run_in_terminal(cmd, ...)
         -- Windows Example: start cmd /k ping "google.com"
         local arg_string = ""
 
-        for i, arg in ipairs(args) do
-            arg_string = arg_string .. ' ' .. win_shell_quote(arg)
+        for i, arg in ipairs(cmd_args) do
+            if (i == 1) then
+                arg_string = arg
+            else
+                arg_string = arg_string .. ' ' .. arg
+            end
         end
 
-        win_cmd = 'start cmd /k ' .. cmd .. arg_string
+        win_cmd = 'start cmd /k ' .. arg_string
         print(win_cmd)
         os.execute(win_cmd)
     else
@@ -63,49 +49,99 @@ local function run_in_terminal(cmd, ...)
 
 end
 
--- Opens a URL with the fieldname's string version of the field appended to the end
--- Useful for accessing field values where the value isn't a string, like ip.src
-local function open_url_with_field_display(url, fieldname, fields)
+
+-- Runs a command with the fieldname's value appended to the end
+-- Display is useful for accessing field values where the value isn't a string, like ip.src
+local function run_cmd_with_field(command, fieldname, fieldtype, fields)
+    if (fieldtype ~= "display" and fieldtype ~= "value") then
+        error("Invalid fieldtype of ".. fieldtype ". Must be 'display' or 'value'")
+    end
     for i, field in ipairs( fields ) do
         if (field.name == fieldname) then
-            browser_open_url(url .. field.display)
+            cmd_arg = ""
+            if (fieldtype == "display") then
+                cmd_arg = field.display
+            elseif (fieldtype == "value") then
+                cmd_arg = field.value
+            else
+                error("Invalid fieldtype")
+            end
+
+            if (validate_domain_name(cmd_arg)) then
+                run_in_terminal(command, cmd_arg)
+            else
+                local win = TextWindow.new("Context menu action failed")
+                win:set("Error: Could not run command with provided argument " ..
+                        "because it failed validation!\n" ..
+                        "Requested command was: " .. command .. "\n" ..
+                        "Provided argument was: " .. cmd_arg)
+            end
             break
         end
     end
 end
 
+-- Generates registration functions to run a command with a field
+-- Returns a function which can be used to easily register more functions
+-- For example:
+-- register_http_host_cmd = create_registration_command_with_field("HTTP Host", "http.host", "value")
+-- register_http_host_cmd("nslookup", "nslookup")
+local function create_registration_command_with_field(menu_title, fieldname, fieldtype)
+    if (fieldtype ~= "display" and fieldtype ~= "value") then
+        error("Invalid value type of ".. fieldtype ". Must be 'display' or 'value'")
+    end
+    local function register_submenu(submenu_title, command)
+        local function generated_callback(...)
+            local fields = {...};
+            run_cmd_with_field(command, fieldname, fieldtype, fields)
+        end
+        register_packet_menu(menu_title .. "/" .. submenu_title, generated_callback, fieldname);
+    end
+    return register_submenu
+end
 
-local function open_url_with_field_value(url, fieldname, fields)
+
+-- Opens a URL with the fieldname's value appended to the end
+-- Display is useful for accessing field values where the value isn't a string, like ip.src
+local function open_url_with_field(url, fieldname, fieldtype, fields)
+    if (fieldtype ~= "display" and fieldtype ~= "value") then
+        error("Invalid fieldtype of ".. fieldtype ". Must be 'display' or 'value'")
+    end
     for i, field in ipairs( fields ) do
         if (field.name == fieldname) then
-            browser_open_url(url .. field.value)
+            url_arg = ""
+            if (fieldtype == "display") then
+                url_arg = field.display
+            elseif (fieldtype == "value") then
+                url_arg = field.value
+            else
+                error("Invalid fieldtype")
+            end
+            browser_open_url(url .. url_arg)
             break
         end
     end
 end
 
--- Generates registration functions to open a URl with a field
+-- Generates registration functions to open a URL with the value from a field
 -- Returns a function which can be used to easily register more functions
 -- For example:
 -- register_http_host = create_registration_menu_field("HTTP Host", "http.host", "value")
 -- register_http_host("Google", "https://www.google.com/search?q=")
-local function create_registration_url_with_field(menu_title, fieldname, value_type)
-    if (value_type ~= "display" and value_type ~= "value") then
-        error("Invalid value type of ".. value_type ". Must be 'display' or 'value'")
+local function create_registration_url_with_field(menu_title, fieldname, fieldtype)
+    if (fieldtype ~= "display" and fieldtype ~= "value") then
+        error("Invalid fieldtype of ".. fieldtype ". Must be 'display' or 'value'")
     end
     local function register_submenu(submenu_title, url)
-        local function generate_host_callback(...)
+        local function generated_callback(...)
             local fields = {...};
-            if (value_type == "value") then
-                return open_url_with_field_value(url, fieldname, fields)
-            else
-                return open_url_with_field_display(url, fieldname, fields)
-            end
+            open_url_with_field(url, fieldname, fieldtype, fields)
         end
-        register_packet_menu(menu_title .. "/" .. submenu_title, generate_host_callback, fieldname);
+        register_packet_menu(menu_title .. "/" .. submenu_title, generated_callback, fieldname);
     end
     return register_submenu
 end
+
 
 -------------------------------------------------
 -- Splunk Analysis
@@ -128,33 +164,6 @@ local function search_field_value_in_splunk(field_name)
 end
 
 -------------------------------------------------
--- HTTP Host Analysis
--------------------------------------------------
-
-local function nslookup(...)
-    local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            run_in_terminal('nslookup', field.value)
-            break
-        end
-    end
-end
-
-local function ping(...)
-    local fields = {...};
-
-    for i, field in ipairs( fields ) do
-        if (field.name == 'http.host') then
-            run_in_terminal('ping', field.value)
-            break
-        end
-    end
-end
-
-
--------------------------------------------------
 -- IP Address Analysis 
 -------------------------------------------------
 
@@ -164,12 +173,14 @@ local function register_both_src_dest_IP(menu_title, url)
     local function generated_callback_src(...)
         local fields = {...};
         local fieldname = "ip.src"
-        return open_url_with_field_display(url, fieldname, fields)
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
     end
     local function generated_callback_dest(...)
         local fields = {...};
         local fieldname = "ip.dst"
-        return open_url_with_field_display(url, fieldname, fields)
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
     end
 
     register_packet_menu("IP Dest/" .. menu_title, generated_callback_dest, "ip.dst");
@@ -235,8 +246,11 @@ register_dns_query_name("Robtex for queried host", "https://www.robtex.com/dns-l
 register_http_host = create_registration_url_with_field("HTTP Host", "http.host", "value")
 register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
 register_http_host("Google", "https://www.google.com/search?q=")
-register_packet_menu("HTTP Host/nslookup", nslookup, "http.host");
-register_packet_menu("HTTP Host/ping", ping, "http.host");
+
+register_http_host_cmd = create_registration_command_with_field("HTTP Host", "http.host", "value")
+register_http_host_cmd("nslookup", "nslookup")
+register_http_host_cmd("ping", "ping")
+
 register_http_host("Robtex", "https://www.robtex.com/dns-lookup/")
 register_http_host("Shodan", "https://www.shodan.io/search?query=")
 -- Note: This action requires setting the SPLUNK_URL:
@@ -280,7 +294,9 @@ register_tls_ja3_server("JA3/Server Lookup", "https://sslbl.abuse.ch/ja3-fingerp
 
 register_tls_sni = create_registration_url_with_field("TLS", "tls.handshake.extensions_server_name", "value")
 register_tls_sni("Mozilla Observatory Headers Check", 'https://observatory.mozilla.org/analyze/')
-register_packet_menu("TLS/nslookup SNI", sni_lookup, "tls.handshake.extensions_server_name")
+register_tls_sni_cmd = create_registration_command_with_field("TLS", "tls.handshake.extensions_server_name", "value")
+register_tls_sni_cmd("nslookup SNI", "nslookup")
+register_tls_sni_cmd("ping SNI", "ping")
 register_tls_sni("SSL Checker scan", 'https://www.sslshopper.com/ssl-checker.html#hostname=')
 register_tls_sni("SSL Labs report", "https://www.ssllabs.com/ssltest/analyze.html?d=")
 register_tls_sni("VirusTotal SNI Lookup", 'https://www.virustotal.com/gui/domain/')
