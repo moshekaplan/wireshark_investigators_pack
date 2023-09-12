@@ -84,6 +84,33 @@ local function open_url_with_field_value(url, fieldname, fields)
     end
 end
 
+-- Generates registration functions to open a URl with a field
+-- Returns a function which can be used to easily register more functions
+-- For example:
+-- register_http_host = create_registration_menu_field("HTTP Host", "http.host", "value")
+-- register_http_host("Google", "https://www.google.com/search?q=")
+local function create_registration_url_with_field(menu_title, fieldname, value_type)
+    if (value_type ~= "display" and value_type ~= "value") then
+        error("Invalid value type of ".. value_type ". Must be 'display' or 'value'")
+    end
+    local function register_submenu(submenu_title, url)
+        local function generate_host_callback(...)
+            local fields = {...};
+            if (value_type == "value") then
+                return open_url_with_field_value(url, fieldname, fields)
+            else
+                return open_url_with_field_display(url, fieldname, fields)
+            end
+        end
+        register_packet_menu(menu_title .. "/" .. submenu_title, generate_host_callback, fieldname);
+    end
+    return register_submenu
+end
+
+-------------------------------------------------
+-- Splunk Analysis
+-------------------------------------------------
+
 local function search_field_value_in_splunk(field_name)
     -- Generates a function to search for a field's
     -- value in Splunk
@@ -101,46 +128,8 @@ local function search_field_value_in_splunk(field_name)
 end
 
 -------------------------------------------------
--- DNS Analysis 
--------------------------------------------------
-
-local function search_google_dns_query(...)
-    local url = 'https://www.google.com/search?q='
-    local fieldname = 'dns.qry.name'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function search_mxtoolbox_dns_query(...)
-    local url = 'https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=dns:'
-    local fieldname = 'dns.qry.name'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
-local function search_robtex_dns_query(...)
-    local url = 'https://www.robtex.com/dns-lookup/'
-    local fieldname = 'dns.qry.name'
-    local fields = {...};
-    return open_url_with_field_value(url, fieldname, fields)
-end
-
--------------------------------------------------
 -- HTTP Host Analysis
 -------------------------------------------------
-
--- Helper to register a callback for HTTP host
--- Entry is displayed as "HTTP Host/<menu_title>
--- Appends http.host to the end of the provided url
-local function register_http_host(menu_title, url)
-    local function generate_host_callback(...)
-        local fields = {...};
-        local fieldname = "http.host"
-        return open_url_with_field_value(url, fieldname, fields)
-    end
-    register_packet_menu("HTTP Host/" .. menu_title, generate_host_callback, "http.host");
-end
-
 
 local function nslookup(...)
     local fields = {...};
@@ -162,24 +151,6 @@ local function ping(...)
             break
         end
     end
-end
-
-
--------------------------------------------------
--- HTTP URL Analysis
--------------------------------------------------
-
--- Helper to register a callback for an HTTP URL
--- Entry is displayed as "HTTP URL/<menu_title>
--- Appends http.request.full_uri to the end of the provided url
-local function register_http_url(menu_title, url)
-    local function generate_url_callback(...)
-        local fields = {...};
-        local fieldname = "http.request.full_uri"
-        return open_url_with_field_display(url, fieldname, fields)
-    end
-
-    register_packet_menu("HTTP URL/" .. menu_title, generate_url_callback, "http.request.full_uri");
 end
 
 
@@ -241,12 +212,14 @@ end
 -------------------------------------------------
 
 -- DNS
-register_packet_menu("DNS/Google for queried host", search_google_dns_query, "dns.qry.name");
-register_packet_menu("DNS/MXToolbox for queried host", search_mxtoolbox_dns_query, "dns.qry.name");
-register_packet_menu("DNS/Robtex for queried host", search_robtex_dns_query, "dns.qry.name");
 
+register_dns_query_name = create_registration_url_with_field("DNS", "dns.qry.name", "value")
+register_dns_query_name("Google for queried host", "https://www.google.com/search?q=")
+register_dns_query_name("MXToolbox for queried host", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=dns:")
+register_dns_query_name("Robtex for queried host", "https://www.robtex.com/dns-lookup/")
 
 -- HTTP Host
+register_http_host = create_registration_url_with_field("HTTP Host", "http.host", "value")
 register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
 register_http_host("Google", "https://www.google.com/search?q=")
 register_packet_menu("HTTP Host/nslookup", nslookup, "http.host");
@@ -262,6 +235,7 @@ register_http_host("VirusTotal", "https://www.virustotal.com/gui/domain/")
 register_http_host("Whois", "https://www.whois.com/whois/")
 
 -- HTTP URL
+register_http_url = create_registration_url_with_field("HTTP URL", "http.request.full_uri", "display")
 register_http_url("McAfee Categorization", "https://sitelookup.mcafee.com/en/feedback/url?action=checksingle&product=01-ts&url=");
 register_http_url("Unfurl", "https://dfir.blog/unfurl/?url=");
 register_http_url("URLVoid", "https://www.urlvoid.com/scan/");
