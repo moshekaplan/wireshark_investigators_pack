@@ -1,15 +1,15 @@
 -- Analyst Investigators Pack
 
 -------------------------------------------------
--- Configurable values 
+-- Configurable values
 -------------------------------------------------
 
--- Uncomment and set this to your Splunk server to 
+-- Uncomment and set this to your Splunk server to
 -- enable Splunk-based actions
 -- SPLUNK_URL = "https://splunk:8443/en-US/appsearch/search?q="
 
 -------------------------------------------------
--- General Helper Functions 
+-- General Helper Functions
 -------------------------------------------------
 local function validate_domain_name(domain)
     return string.find(domain, "^%s*[%w%._-]+$") ~= nil
@@ -164,7 +164,7 @@ local function search_field_value_in_splunk(field_name)
 end
 
 -------------------------------------------------
--- IP Address Analysis 
+-- IP Address Analysis
 -------------------------------------------------
 
 -- Register a callback for both Source and Dest IPs
@@ -183,12 +183,31 @@ local function register_both_src_dest_IP(menu_title, url)
         return open_url_with_field(url, fieldname, fieldtype, fields)
     end
 
+
     register_packet_menu("IP Dest/" .. menu_title, generated_callback_dest, "ip.dst");
     register_packet_menu("IP Src/" .. menu_title, generated_callback_src, "ip.src");
+
+end
+
+local function register_both_src_dest_IPv6(menu_title, url)
+    local function generated_callback_v6_src(...)
+        local fields = {...};
+        local fieldname = "ipv6.src"
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
+    end
+    local function generated_callback_v6_dst(...)
+        local fields = {...};
+        local fieldname = "ipv6.dst"
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
+    end
+    register_packet_menu("IP Dest/" .. menu_title, generated_callback_v6_dst, "ipv6.dst");
+    register_packet_menu("IP Src/" .. menu_title, generated_callback_v6_src, "ipv6.src");
 end
 
 -------------------------------------------------
--- SMTP/IMF Analysis 
+-- SMTP/IMF Analysis
 -------------------------------------------------
 
 -- Emails with this subject
@@ -210,16 +229,16 @@ local function lookup_spamhaus_imf_from(...)
             else
                 email_address = field.value
             end
-            
+
             browser_open_url(url .. email_address)
             break
         end
     end
-    
+
 end
 
 -------------------------------------------------
--- TLS Analysis 
+-- TLS Analysis
 -------------------------------------------------
 
 local function sni_lookup(...)
@@ -232,7 +251,7 @@ local function sni_lookup(...)
 end
 
 -------------------------------------------------
--- Register all packet menus 
+-- Register all packet menus
 -------------------------------------------------
 
 -- DNS
@@ -274,13 +293,22 @@ if SPLUNK_URL ~= nil then
     register_packet_menu("IMF/Splunk search for subject", search_field_value_in_splunk("imf.subject"), "imf.subject");
 end
 
--- IP
+-- IPv4
 register_both_src_dest_IP("ASN lookup", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=asn%3a")
 register_both_src_dest_IP("IP Abuse DB lookup", "https://www.abuseipdb.com/check/")
 register_both_src_dest_IP("IP Location lookup", "https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=")
 register_both_src_dest_IP("IP Void scan", "https://www.ipvoid.com/scan/")
 register_both_src_dest_IP("Shodan search", "https://www.shodan.io/host/")
 register_both_src_dest_IP("VirusTotal IP Lookup", "https://www.virustotal.com/gui/ip-address/")
+
+-- IPv6
+register_both_src_dest_IPv6("ASN lookup", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=asn%3a")
+register_both_src_dest_IPv6("IP Abuse DB lookup", "https://www.abuseipdb.com/check/")
+register_both_src_dest_IPv6("IP Location lookup", "https://www.iplocation.net/ip-lookup?submit=IP+Lookup&query=")
+register_both_src_dest_IPv6("Shodan search", "https://www.shodan.io/host/")
+-- TODO: will need to convert the ':' to \%253A
+-- register_both_src_dest_IPv6("VirusTotal IP Lookup", "https://www.virustotal.com/gui/ip-address/")
+
 -- Note: This action requires setting the SPLUNK_URL:
 if SPLUNK_URL ~= nil then
     register_both_src_dest_IP("Splunk search", SPLUNK_URL)
