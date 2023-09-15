@@ -182,9 +182,24 @@ local function register_both_src_dest_IP(menu_title, url)
         local fieldtype = "display"
         return open_url_with_field(url, fieldname, fieldtype, fields)
     end
+    local function generated_callback_v6_src(...)
+        local fields = {...};
+        local fieldname = "ipv6.src"
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
+    end
+    local function generated_callback_v6_dst(...)
+        local fields = {...};
+        local fieldname = "ipv6.dst"
+        local fieldtype = "display"
+        return open_url_with_field(url, fieldname, fieldtype, fields)
+    end
 
     register_packet_menu("IP Dest/" .. menu_title, generated_callback_dest, "ip.dst");
     register_packet_menu("IP Src/" .. menu_title, generated_callback_src, "ip.src");
+    register_packet_menu("IP Dest/" .. menu_title, generated_callback_v6_dst, "ipv6.dst");
+    register_packet_menu("IP Src/" .. menu_title, generated_callback_v6_src, "ipv6.src");
+
 end
 
 -------------------------------------------------
