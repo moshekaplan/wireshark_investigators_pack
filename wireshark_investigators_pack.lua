@@ -15,17 +15,19 @@ local function validate_domain_name(domain)
     return string.find(domain, "^%s*[%w%._-]+$") ~= nil
 end
 
--- Note: Currently only supports windows!
-local function run_in_terminal(...)
-    local cmd_args = {...};
-
-    -- Detect the client's operating system
-    local local_os = 'unknown'
+local function determine_os(...)
+    local local_os = ''
     if (package.config:sub(1,1) == '\\') then
         local_os = 'win'
     else
         local_os = 'nix'
     end
+    return local_os
+end
+
+local function run_in_terminal(...)
+    local cmd_args = {...};
+    local local_os = determine_os()
 
     -- Launch a terminal with the specified command, OS-specific
     if (local_os == "win") then
@@ -43,6 +45,20 @@ local function run_in_terminal(...)
         win_cmd = 'start cmd /k ' .. arg_string
         print(win_cmd)
         os.execute(win_cmd)
+    elseif (local_os == "nix") then
+        local arg_string = ""
+        for i, arg in ipairs(cmd_args) do
+            if (i == 1) then
+                arg_string = arg
+            else
+                arg_string = arg_string .. ' ' .. arg
+            end
+        end
+        local handle = io.popen(arg_string)
+        local result = handle:read("*a")
+        handle:close()
+        local cmd_results = TextWindow.new("Command Results")
+        cmd_results:set(result)
     else
         print("Unsupported Operating System")
     end
@@ -237,18 +253,6 @@ local function lookup_spamhaus_imf_from(...)
 
 end
 
--------------------------------------------------
--- TLS Analysis
--------------------------------------------------
-
-local function sni_lookup(...)
-    local fields = {...};
-    for i, field in ipairs( fields ) do
-        if (field.name == 'tls.handshake.extensions_server_name') then
-            run_in_terminal('nslookup', field.value)
-        end
-    end
-end
 
 -------------------------------------------------
 -- Register all packet menus
@@ -260,15 +264,22 @@ register_dns_query_name = create_registration_url_with_field("DNS", "dns.qry.nam
 register_dns_query_name("Google for queried host", "https://www.google.com/search?q=")
 register_dns_query_name("MXToolbox for queried host", "https://mxtoolbox.com/SuperTool.aspx?run=toolpage&action=dns:")
 register_dns_query_name("Robtex for queried host", "https://www.robtex.com/dns-lookup/")
+register_dns_query_name("URLScan for queried host", "https://urlscan.io/api/v1/search/?q=domain:")
 
 -- HTTP Host
 register_http_host = create_registration_url_with_field("HTTP Host", "http.host", "value")
 register_http_host("Alienvault OTX", "https://otx.alienvault.com/indicator/domain/")
 register_http_host("Google", "https://www.google.com/search?q=")
+register_http_host("URLScan", "https://urlscan.io/api/v1/search/?q=domain:")
 
 register_http_host_cmd = create_registration_command_with_field("HTTP Host", "http.host", "value")
 register_http_host_cmd("nslookup", "nslookup")
-register_http_host_cmd("ping", "ping")
+
+if determine_os == "win" then
+    register_http_host_cmd("ping", "ping")
+elseif determine_os() == "nix" then
+    register_http_host_cmd("ping", "ping -c 4 ")
+end
 
 register_http_host("Robtex", "https://www.robtex.com/dns-lookup/")
 register_http_host("Shodan", "https://www.shodan.io/search?query=")
@@ -322,9 +333,16 @@ register_tls_ja3_server("JA3/Server Lookup", "https://sslbl.abuse.ch/ja3-fingerp
 
 register_tls_sni = create_registration_url_with_field("TLS", "tls.handshake.extensions_server_name", "value")
 register_tls_sni("Mozilla Observatory Headers Check", 'https://observatory.mozilla.org/analyze/')
+register_tls_sni("URLScan", 'https://urlscan.io/api/v1/search/?q=domain:')
 register_tls_sni_cmd = create_registration_command_with_field("TLS", "tls.handshake.extensions_server_name", "value")
 register_tls_sni_cmd("nslookup SNI", "nslookup")
-register_tls_sni_cmd("ping SNI", "ping")
+
+if determine_os() == "win" then
+    register_tls_sni_cmd("ping SNI", "ping")
+elseif determine_os() == "nix" then
+        register_tls_sni_cmd("ping SNI", "ping -c 4 ")
+end
+
 register_tls_sni("SSL Checker scan", 'https://www.sslshopper.com/ssl-checker.html#hostname=')
 register_tls_sni("SSL Labs report", "https://www.ssllabs.com/ssltest/analyze.html?d=")
 register_tls_sni("VirusTotal SNI Lookup", 'https://www.virustotal.com/gui/domain/')
